@@ -1045,7 +1045,7 @@ def run(args):
 
     if not skip_subcommands:
         log.info("SUBCOMMMANDS RUNNED SUCESSFULLY")
-        subcommands.process_all_log_files(url_base)
+        subcommands.run(url_base,"rgw")
 
     return jenkins_rc
 
