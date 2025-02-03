@@ -1044,8 +1044,11 @@ def run(args):
         log.info(f"Generated sosreports location : {url_base}/sosreports\n")
 
     if not skip_subcommands:
-        log.info("SUBCOMMMANDS RUNNED SUCESSFULLY")
+        log.info("SUBCOMMANDS started")
+        current_dir = os.getcwd()
+        print("the current working directory is :",current_dir)
         subcommands.run(url_base,"rgw")
+        log.info("Subcommands runned successfully")
 
     return jenkins_rc
 
