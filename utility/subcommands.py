@@ -24,6 +24,24 @@ Options:
 global_output_hashes = set()
 log_links_dict = {}
 
+def construct_final_url(original_path):
+    """Transform filesystem path to HTTP URL"""
+    parts = original_path.split('/')
+    try:
+        # Find the index after 'ceph-builds'
+        index = parts.index('ceph-builds')
+    except ValueError:
+        raise ValueError("The path does not contain 'ceph-builds'")
+    
+    # Extract relevant parts and filter out 'logs'
+    relevant_parts = parts[index + 1:]
+    filtered_parts = [part for part in relevant_parts if part not in ('logs', '')]
+    
+    # Construct the new path and combine with base URL
+    new_path = '/' + '/'.join(filtered_parts)
+    base_url = 'http://magna002.ceph.redhat.com/cephci-jenkins/results'
+    return base_url + new_path
+
 def compute_output_hash(output):
     return hashlib.sha256(json.dumps(output, sort_keys=True).encode("utf-8")).hexdigest()
 
@@ -133,17 +151,16 @@ def save_to_json(command, output, complete_url, remote_base_dir, subcomponent_fi
     global_output_hashes.add(output_hash)
 
     current_dir = os.getcwd()
-    print("the current working directory is :",current_dir)
     
     if "magna002" in current_dir:
         url_parts = complete_url.strip("/").split("/")
-        openstack_version = url_parts[7]  
-        rhel_version = url_parts[8]       
-        ceph_version = url_parts[10]      
-        subfolder = url_parts[9]          
-        subcomponent = subcomponent_filter
+        # Correct indices for transformed URL structure
+        openstack_version = url_parts[7]  # RH
+        rhel_version = url_parts[8]       # 8.0
+        ceph_version = url_parts[10]      # 19.2.0-73
+        subfolder = url_parts[9]          # Test
 
-        remote_dir = os.path.join(remote_base_dir, openstack_version, rhel_version, ceph_version, subcomponent, subfolder)
+        remote_dir = os.path.join(remote_base_dir, openstack_version, rhel_version, ceph_version, subcomponent_filter, subfolder)
         os.makedirs(remote_dir, exist_ok=True)
 
         match = re.search(r'radosgw-admin (\w+)', command)
@@ -170,7 +187,6 @@ def save_to_json(command, output, complete_url, remote_base_dir, subcomponent_fi
                     json.dump(data, remote_file, indent=4)
 
     else:
-        # Store locally
         local_dir = "/Users/suriya/Desktop/subcommandsoutput/output11"
         os.makedirs(local_dir, exist_ok=True)
 
@@ -198,12 +214,19 @@ def save_to_json(command, output, complete_url, remote_base_dir, subcomponent_fi
                     json.dump(data, local_file, indent=4)
 
 def run(complete_url: str, subcomponent_filter: str):
-    remote_base_dir = '/ceph/cephci-jenkins/cephci-command-results'
+    remote_base_dir = 'http://magna002.ceph.redhat.com/cephci-jenkins/cephci-command-results/'
     process_all_log_files(complete_url, remote_base_dir, subcomponent_filter)
 
 if __name__ == "__main__":
     arguments = docopt(doc)
-    complete_url = arguments["--url"]
+    original_path = arguments["--url"]
     subcomponent_filter = arguments["--filter"]
+
+    try:
+        # Transform filesystem path to HTTP URL
+        complete_url = construct_final_url(original_path)
+    except ValueError as e:
+        print(f"Error: {e}")
+        exit(1)
 
     run(complete_url, subcomponent_filter)
