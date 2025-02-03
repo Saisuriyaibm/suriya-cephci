@@ -24,24 +24,6 @@ Options:
 global_output_hashes = set()
 log_links_dict = {}
 
-def construct_final_url(original_path):
-    """Transform filesystem path to HTTP URL"""
-    parts = original_path.split('/')
-    try:
-        # Find the index after 'ceph-builds'
-        index = parts.index('ceph-builds')
-    except ValueError:
-        raise ValueError("The path does not contain 'ceph-builds'")
-    
-    # Extract relevant parts and filter out 'logs'
-    relevant_parts = parts[index + 1:]
-    filtered_parts = [part for part in relevant_parts if part not in ('logs', '')]
-    
-    # Construct the new path and combine with base URL
-    new_path = '/' + '/'.join(filtered_parts)
-    base_url = 'http://magna002.ceph.redhat.com/cephci-jenkins/results'
-    return base_url + new_path
-
 def compute_output_hash(output):
     return hashlib.sha256(json.dumps(output, sort_keys=True).encode("utf-8")).hexdigest()
 
@@ -219,14 +201,6 @@ def run(complete_url: str, subcomponent_filter: str):
 
 if __name__ == "__main__":
     arguments = docopt(doc)
-    original_path = arguments["--url"]
+    complete_url = arguments["--url"]
     subcomponent_filter = arguments["--filter"]
-
-    try:
-        # Transform filesystem path to HTTP URL
-        complete_url = construct_final_url(original_path)
-    except ValueError as e:
-        print(f"Error: {e}")
-        exit(1)
-
     run(complete_url, subcomponent_filter)
