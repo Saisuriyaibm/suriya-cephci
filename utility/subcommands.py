@@ -152,7 +152,7 @@ def save_to_json(command, output, complete_url, remote_base_dir, subcomponent_fi
 
     current_dir = os.getcwd()
     
-    if "magna002" in current_dir:
+    if "jenkins" in current_dir:
         url_parts = complete_url.strip("/").split("/")
         # Correct indices for transformed URL structure
         openstack_version = url_parts[7]  # RH
