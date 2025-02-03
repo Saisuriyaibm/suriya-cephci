@@ -1043,7 +1043,7 @@ def run(args):
             get_ceph_var_logs(ceph_cluster_dict[cluster], run_dir)
         log.info(f"Generated sosreports location : {url_base}/sosreports\n")
 
-     if not skip_subcommands:
+    if not skip_subcommands:
         log.info("SUBCOMMMANDS started ")
         # Split the original path into components
         parts = url_base.split('/')
